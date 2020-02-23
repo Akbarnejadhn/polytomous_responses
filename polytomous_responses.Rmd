@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(viridis)
+library(ggplot2)
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
@@ -30,7 +31,7 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 We are given the data from an investigation into residents' satisfaction with their housing conditions and different types of housing and the degree of contact with other residents. We are interested in associations between the levels of satisfaction and contact with other residents and associations between the levels of satisfaction and type of housing.
 
-```{r housing_data}
+```{r housing_data, include=FALSE}
 
 #satisfaction: 0=low, 1=medium, 2=high
 #contact:      0=low, 1=high
@@ -48,6 +49,57 @@ housing_data = tibble(
   contact = factor(contact, levels = c("low_cont", "high_cont")), 
   housing_type = factor(housing_type, levels = c("tower_block", "apartment", "house"))
   )
-
 ```
+
+We first look at association between satisfaction and contact with other residents. The table below shows the percentage of residents in each combination of contact-satisfaction level, and the bar chart below depicts the distribution:
+
+```{r sat_cont_df, include=FALSE}
+
+sat_cont_df = housing_data %>% 
+  group_by(satisfaction, contact) %>% 
+  summarize (n = sum(n)) %>%                            # summing up the number of people based on sat and cont
+  group_by(contact) %>% 
+  mutate (total_contact = sum(n),                       # summing up the totral number of people with high/low contact
+          number_percent = (n/total_contact)*100) %>%   # calculating percentages
+  select(satisfaction, contact, number_percent)         # selecting cols that I need
+```
+
+```{r sat_cont, echo=FALSE}
+
+sat_cont_df %>% 
+  pivot_wider(names_from = satisfaction, values_from = number_percent) %>%
+  knitr::kable()
+
+sat_cont_df %>% 
+  ggplot(aes(fill=satisfaction, y=number_percent, x=contact)) +
+  geom_bar(position="dodge", stat="identity")
+```
+
+We can observe that ...........................
+
+Now, we look at association between satisfaction and housing type that residents live in. The table below shows the percentage of residents in each combination of housing-satisfaction level, and the bar chart below depicts the distribution:
+
+```{r sat_hous_df, include=FALSE}
+
+sat_hous_df = housing_data %>% 
+  group_by(satisfaction, housing_type) %>% 
+  summarize (n = sum(n)) %>%                            # summing up the number of people based on sat and cont
+  group_by(housing_type) %>% 
+  mutate (total_housing = sum(n),                       # summing up the totral number of people with high/low contact
+          number_percent = (n/total_housing)*100) %>%   # calculating percentages
+  select(satisfaction, housing_type, number_percent)         # selecting cols that I need
+```
+
+```{r sat_hous, echo=FALSE}
+
+sat_hous_df %>% 
+  pivot_wider(names_from = satisfaction, values_from = number_percent) %>%
+  knitr::kable()
+
+sat_hous_df %>% 
+  ggplot(aes(fill=satisfaction, y=number_percent, x=housing_type)) +
+  geom_bar(position="dodge", stat="identity")
+```
+
+We can observe that.................................
 
