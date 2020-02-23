@@ -103,3 +103,12 @@ sat_hous_df %>%
 
 We can observe that.................................
 
+### Part 2
+
+In this part, we are looking for the ssociations between the levels of satisfaction and the other two variables using nominal logistic regression. To make the model, I use dummy variable for house types.
+
+```{r}
+
+```
+
+Describe your findings (the pattern in the associations, odds ratios with 95% confidence intervals, goodness-of-fit).
