@@ -1,0 +1,53 @@
+---
+title: "polytomous_responses"
+author: "Hana Akbarnejad"
+date: "2/23/2020"
+output: html_document
+---
+
+**The Full code chunks and results for this assignment can be found on the Rmd file submitted with this pdf file**
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(viridis)
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 6,
+  out.width = "90%"
+)
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+```
+
+We are given the data from an investigation into residents' satisfaction with their housing conditions and different types of housing and the degree of contact with other residents. We are interested in associations between the levels of satisfaction and contact with other residents and associations between the levels of satisfaction and type of housing.
+
+```{r housing_data}
+
+#satisfaction: 0=low, 1=medium, 2=high
+#contact:      0=low, 1=high
+#house_type:   0=tower_block, 1=apart, 2=house
+
+housing_data = tibble( 
+                    satisfaction = rep(c("low_sat", "medium_sat", "high_sat"), 6),
+                    contact = rep(rep(c("low_cont", "high_cont"), each = 3), 3),
+                    housing_type = rep(c("tower_block", "apartment", "house"), each = 6),
+                    n = c(c(65, 54, 100, 34, 47, 100), 
+                          c(130, 76, 111, 141, 116, 191), 
+                          c(67, 48, 62, 130, 105, 104))) %>% 
+  mutate(
+  satisfaction = factor(satisfaction, levels = c("low_sat", "medium_sat", "high_sat")),
+  contact = factor(contact, levels = c("low_cont", "high_cont")), 
+  housing_type = factor(housing_type, levels = c("tower_block", "apartment", "house"))
+  )
+
+```
+
