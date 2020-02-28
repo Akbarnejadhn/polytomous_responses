@@ -235,4 +235,4 @@ cbind(housing = nominal_housing_data$housing_type, contact = nominal_housing_dat
   knitr::kable()
 ```
 
-We can observe that the highest value of Pearson residuals is -1.48. This shows that the highest discrepensies of data is observed when there is high satisfaction, high contact, and hous housing type.
+We can observe that the highest value of Pearson residuals is -1.48. This shows that the highest discrepancies of data is observed when there is high satisfaction, high contact, and hous housing type. This shows that the model has not been as successful predictiong this portion of data.
