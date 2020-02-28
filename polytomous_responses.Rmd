@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(viridis)
 library(ggplot2)
+library(nnet)
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
@@ -105,10 +106,85 @@ We can observe that.................................
 
 ### Part 2
 
-In this part, we are looking for the ssociations between the levels of satisfaction and the other two variables using nominal logistic regression. To make the model, I use dummy variable for house types.
+**Fitting the nominal model and obtaining odds ratios with 95% confidence intervals**
 
-```{r}
+In this part, we are looking for the ssociations between the levels of satisfaction and the two other variables of interest using nominal logistic regression. To make the model, I use dummy variable for house types.
 
+The first step is to choose a reference category. Here, the reference category is Low Satisfaction.
+
+Then we need to choose the dummy variables:
+
+x1: the indicator of high contact
+
+x2: the indicator of apartment
+
+x3: indicator of house
+
+Our nominal models would look like this:
+
+```{r nominal}
+
+# fitting a nominal model
+nominal_housing_data = housing_data %>% 
+  pivot_wider(names_from = satisfaction, values_from = n)
+
+sat_nominal = multinom(cbind(low_sat, medium_sat, high_sat) ~ housing_type + contact, data = nominal_housing_data)
+sat_nominal_fit = summary(sat_nominal)
+sat_nominal_fit
 ```
 
-Describe your findings (the pattern in the associations, odds ratios with 95% confidence intervals, goodness-of-fit).
+```{r ci}
+
+# computing 95% CI
+ci_1 = round(exp(sat_nominal_fit$coefficients[1, 1] + c(qnorm(0.025),-qnorm(0.025))* sat_nominal_fit$standard.errors[1, 1]), 3)
+ci_2 = round(exp(sat_nominal_fit$coefficients[1, 4] + c(qnorm(0.025),-qnorm(0.025))* sat_nominal_fit$standard.errors[1, 4]), 3)
+ci_3 = round(exp(sat_nominal_fit$coefficients[1, 2] + c(qnorm(0.025),-qnorm(0.025))* sat_nominal_fit$standard.errors[1, 2]), 3)
+ci_4 = round(exp(sat_nominal_fit$coefficients[1, 3] + c(qnorm(0.025),-qnorm(0.025))* sat_nominal_fit$standard.errors[1, 3]), 3)
+ci_5 = round(exp(sat_nominal_fit$coefficients[2, 1] + c(qnorm(0.025),-qnorm(0.025))* sat_nominal_fit$standard.errors[2, 1]), 3)
+ci_6 = round(exp(sat_nominal_fit$coefficients[2, 4] + c(qnorm(0.025),-qnorm(0.025))* sat_nominal_fit$standard.errors[2, 4]), 3)
+ci_7 = round(exp(sat_nominal_fit$coefficients[2, 2] + c(qnorm(0.025),-qnorm(0.025))* sat_nominal_fit$standard.errors[2, 2]), 3)
+ci_8 = round(exp(sat_nominal_fit$coefficients[2, 3] + c(qnorm(0.025),-qnorm(0.025))* sat_nominal_fit$standard.errors[2, 3]), 3)
+```
+
+
+Here are our two models and the interpretations of intercepts and coefficients of each:
+
+**First Model:** 
+$$log(\pi_2/\pi_1) = \beta_{02} + \beta_{12}x_1+\beta_{22}x_2+\beta_{32}x_3$$
+
+$\beta_{02} = -0.107:$ The log odds of medium satisfaction versus low satisfaction between peoplewith low contact who live in tower is `r round(sat_nominal_fit$coefficients[1, 1], 3)` (Equivalently, odds = 0.898 with $95\% CI =$ (`r ci_1`)).
+
+$\beta_{12} = 0.296:$ The log odds ratio of medium satisfaction versus low satisfaction between people with low contact and high contact is `r round(sat_nominal_fit$coefficients[1, 4], 3)`, keeping their housing condition constant (Equivalently, odds ratio = 1.344 with $95\% CI =$ (`r ci_2`)).
+
+$\beta_{22} = -0.407:$ The log odds ratio of medium satisfaction versus low satisfaction between people with live in apartment and people who live in tower is `r round(sat_nominal_fit$coefficients[1, 2], 3)`, keeping their contact level constant (Equivalently, odds ratio = 0.665 with $95\% CI =$ (`r ci_3`)).
+
+$\beta_{32} = -0.337:$ The log odds ratio of medium satisfaction versus low satisfaction between people with live in house and people who live in tower is `r round(sat_nominal_fit$coefficients[1, 3], 3)`, keeping their contact level constant (Equivalently, odds ratio = 0.714 with $95\% CI =$ (`r ci_4`)).
+
+**Second Model:** 
+$$log(\pi_3/\pi_1) = \beta_{03} + \beta_{13}x_1+\beta_{23}x_2+\beta_{33}x_3$$
+
+$\beta_{03} = 0.561:$ The log odds of high satisfaction versus low satisfaction between people with low contact who live in tower is `r round(sat_nominal_fit$coefficients[2, 1], 3)` (Equivalently, odds = 1.752 with $95\% CI =$ (`r ci_5`)).
+
+$\beta_{13} = 0.328:$ The log odds ratio of high satisfaction versus low satisfaction between people with low contact and high contact is `r round(sat_nominal_fit$coefficients[2, 4], 3)`, keeping their housing condition constant (Equivalently, odds ratio = 1.388 with $95\% CI =$ (`r ci_6`)).
+
+$\beta_{23} = -0.642:$ The log odds ratio of high satisfaction versus low satisfaction between people with live in apartment and people who live in tower is `r round(sat_nominal_fit$coefficients[2, 2], 3)`, keeping their contact level constant (Equivalently, odds ratio = 0.526 with $95\% CI =$ (`r ci_7`)).
+
+$\beta_{33} = -0.946:$ The log odds ratio of high satisfaction versus low satisfaction between people with live in house and people who live in tower is `r round(sat_nominal_fit$coefficients[2, 3], 3)`, keeping their contact level constant (Equivalently, odds ratio = 0.388 with $95\% CI =$ (`r ci_8`)).
+
+**Analyzing goodness-of-fit**
+
+```{r gof}
+
+# computing pearson residuals
+pihat = predict(sat_nominal,type='probs') 
+m = rowSums(nominal_housing_data[,3:5])
+res_pearson=(nominal_housing_data[,3:5] - pihat * m)/sqrt(pihat * m)
+
+G_stat = sum (res_pearson ^ 2) # computing G-stat
+
+pval = 1-pchisq (G_stat, df = (6-4)*(3-1)) # pvalue >>> 0.1395076, fail to reject null >> fit is good
+
+D_stat = sum(2*nominal_housing_data[,3:5]*log(nominal_housing_data[,3:5]/(m*pihat))) # deviance
+```
+
+It can be observed that **Generalized Pearson** $\chi^2$ is `r round(G_stat, 3)` with **p-value** of `r round(pval, 3)`, and the **Deviance statistics** is `r round(D_stat, 3)` which show that the model fits the data well. 
