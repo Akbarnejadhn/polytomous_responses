@@ -1,11 +1,9 @@
 ---
-title: "polytomous_responses"
+title: "Polytomous Responses (nominal, ordinal)"
 author: "Hana Akbarnejad"
-date: "2/23/2020"
+date: "2/28/2020"
 output: html_document
 ---
-
-**The Full code chunks and results for this assignment can be found on the Rmd file submitted with this pdf file**
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -14,6 +12,7 @@ library(tidyverse)
 library(viridis)
 library(ggplot2)
 library(nnet)
+library(MASS) # ordinal response (iii)
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
@@ -52,6 +51,8 @@ housing_data = tibble(
   )
 ```
 
+### Part i
+
 We first look at association between satisfaction and contact with other residents. The table below shows the percentage of residents in each combination of contact-satisfaction level, and the bar chart below depicts the distribution:
 
 ```{r sat_cont_df, include=FALSE}
@@ -62,7 +63,8 @@ sat_cont_df = housing_data %>%
   group_by(contact) %>% 
   mutate (total_contact = sum(n),                       # summing up the totral number of people with high/low contact
           number_percent = (n/total_contact)*100) %>%   # calculating percentages
-  select(satisfaction, contact, number_percent)         # selecting cols that I need
+  dplyr::select(satisfaction, contact, number_percent)          # selecting cols that I need
+
 ```
 
 ```{r sat_cont, echo=FALSE}
@@ -76,7 +78,7 @@ sat_cont_df %>%
   geom_bar(position="dodge", stat="identity")
 ```
 
-We can observe that ...........................
+We can observe that among people who have lower contact, the percentage of people with both high and low satisfaction is high. However, in people who have higher contact, the percentage of people with high satisfaction is obviously higher than medium and low satisfaction.
 
 Now, we look at association between satisfaction and housing type that residents live in. The table below shows the percentage of residents in each combination of housing-satisfaction level, and the bar chart below depicts the distribution:
 
@@ -88,7 +90,7 @@ sat_hous_df = housing_data %>%
   group_by(housing_type) %>% 
   mutate (total_housing = sum(n),                       # summing up the totral number of people with high/low contact
           number_percent = (n/total_housing)*100) %>%   # calculating percentages
-  select(satisfaction, housing_type, number_percent)         # selecting cols that I need
+  dplyr::select(satisfaction, housing_type, number_percent)         # selecting cols that I need
 ```
 
 ```{r sat_hous, echo=FALSE}
@@ -102,9 +104,9 @@ sat_hous_df %>%
   geom_bar(position="dodge", stat="identity")
 ```
 
-We can observe that.................................
+We can observe that amon people who live in live in tower blocks, there is a high proportion of people who are highly satisfied with their living condition. In apartment housing, the percentage of people who have high and low satisfaction with their living condition is higher than medium satisfaction, and these eprcentages are relatively close. Finally, among people who live in houses, the percentage of people with low satisfaction is higher than the other two groups. In other words, when we go from tower block housing to apartment and to house, the proportion of low satisfied people increase and the percentage of medium satisfied people also increases, but leass sharply. However, the proportion of highly satisfied people drastically decreases.
 
-### Part 2
+### Part ii
 
 **Fitting the nominal model and obtaining odds ratios with 95% confidence intervals**
 
@@ -188,3 +190,49 @@ D_stat = sum(2*nominal_housing_data[,3:5]*log(nominal_housing_data[,3:5]/(m*piha
 ```
 
 It can be observed that **Generalized Pearson** $\chi^2$ is `r round(G_stat, 3)` with **p-value** of `r round(pval, 3)`, and the **Deviance statistics** is `r round(D_stat, 3)` which show that the model fits the data well. 
+
+### Part iii
+
+In this part, I am going to fit a proportional odds model to the housing data because the response is ordinal.
+
+```{r ordinal}
+
+sat_ordinal = polr(satisfaction ~ housing_type + contact, data = housing_data, weights = n)
+summary(sat_ordinal)
+```
+
+The ordinal models will look like this:
+$$log(\frac{\pi_1}{\pi_2+\pi_3}) = \beta_{01} + \beta_{1}x_1+\beta_{2}x_2+\beta_{3}x_3$$
+Or:
+$$log(\frac{\pi_1+\pi_2}{\pi_3}) = \beta_{02} + \beta_{1}x_1+\beta_{2}x_2+\beta_{3}x_3$$
+In this problem we have the same references and x variables: x1: the indicator of high contact
+
+x2: the indicator of apartment
+
+x3: indicator of house
+
+$\beta_{1} = -0.2524$ which is the log odds ratio of falling in lower category versus higher category for people with high contact versus low, holding their houisng condition constant.
+
+$\beta_{2} = 0.5009$ which is the log odds ratio of falling in lower category versus higher category between people who live in apartment versus in tower, holding their contact rate constant.
+
+$\beta_{3} = 0.7362$ which is the log odds ratio of falling in lower category versus higher category between people who live in house versus in tower, holding their contact rate constant.
+
+We can observe that using proportinal odds model is easier than nominal model since we can interpret coefficients more easily by dividing them into lower and higher categories.
+
+Looking at the coefficients, it can be observed that fixing housing condition, people who have higher contact are less likely to fall in the lower satisfaction groups. Also we can see that both groups of people who live in apartments and houses, are more likely to fall into lower categories of satisfaction compared to people who live in tower blocks, fixing their contact rate.
+
+### Part iv
+
+In this part, the goal is to calculate Pearson residuals from the proportional odds model to identify the iscrepancies between the observed frequencies and expected frequencies estimated from the model. 
+
+```{r}
+
+p_hat = predict(sat_ordinal, nominal_housing_data, type = 'p')
+
+res_pearson2 = (nominal_housing_data[,3:5] - p_hat * m) / sqrt(p_hat * m)
+
+cbind(housing = nominal_housing_data$housing_type, contact = nominal_housing_data$contact, res_pearson2) %>%
+  knitr::kable()
+```
+
+We can observe that the highest value of Pearson residuals is -1.48. This shows that the highest discrepensies of data is observed when there is high satisfaction, high contact, and hous housing type.
