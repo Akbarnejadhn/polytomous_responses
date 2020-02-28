@@ -2,7 +2,7 @@
 title: "Polytomous Responses (nominal, ordinal)"
 author: "Hana Akbarnejad"
 date: "2/28/2020"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -221,9 +221,11 @@ We can observe that using proportinal odds model is easier than nominal model si
 
 Looking at the coefficients, it can be observed that fixing housing condition, people who have higher contact are less likely to fall in the lower satisfaction groups. Also we can see that both groups of people who live in apartments and houses, are more likely to fall into lower categories of satisfaction compared to people who live in tower blocks, fixing their contact rate.
 
+\pagebreak
+
 ### Part iv
 
-In this part, the goal is to calculate Pearson residuals from the proportional odds model to identify the iscrepancies between the observed frequencies and expected frequencies estimated from the model. 
+In this part, the goal is to calculate Pearson residuals from the proportional odds model to identify the discrepancies between the observed frequencies and expected frequencies estimated from the model. 
 
 ```{r}
 
@@ -235,4 +237,4 @@ cbind(housing = nominal_housing_data$housing_type, contact = nominal_housing_dat
   knitr::kable()
 ```
 
-We can observe that the highest value of Pearson residuals is -1.48. This shows that the highest discrepancies of data is observed when there is high satisfaction, high contact, and hous housing type. This shows that the model has not been as successful predictiong this portion of data.
+We can observe that the highest value of Pearson residuals is -1.48. This shows that the highest discrepancies of data is observed when there is high satisfaction, high contact, and hous housing type. Also, the Pearson residuals representing people who live in houses and have low contacts and medium satisfaction is also high with the value of 1.368. The third highest residual is for people of high satisfaction who live in house and have low cantact. This shows that the model has not been as successful predictiong this portion of data and in general, we can observe some discrepencies in people who live in houses and have high satisfaction. 

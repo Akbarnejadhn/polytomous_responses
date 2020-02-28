@@ -539,7 +539,7 @@ summary(sat_ordinal)</code></pre>
 </div>
 <div id="part-iv" class="section level3">
 <h3>Part iv</h3>
-<p>In this part, the goal is to calculate Pearson residuals from the proportional odds model to identify the iscrepancies between the observed frequencies and expected frequencies estimated from the model.</p>
+<p>In this part, the goal is to calculate Pearson residuals from the proportional odds model to identify the discrepancies between the observed frequencies and expected frequencies estimated from the model.</p>
 <pre class="r"><code>p_hat = predict(sat_ordinal, nominal_housing_data, type = &#39;p&#39;)
 
 res_pearson2 = (nominal_housing_data[,3:5] - p_hat * m) / sqrt(p_hat * m)
@@ -601,7 +601,7 @@ cbind(housing = nominal_housing_data$housing_type, contact = nominal_housing_dat
 </tr>
 </tbody>
 </table>
-<p>We can observe that the highest value of Pearson residuals is -1.48. This shows that the highest discrepancies of data is observed when there is high satisfaction, high contact, and hous housing type. This shows that the model has not been as successful predictiong this portion of data.</p>
+<p>We can observe that the highest value of Pearson residuals is -1.48. This shows that the highest discrepancies of data is observed when there is high satisfaction, high contact, and hous housing type. Also, the Pearson residuals representing people who live in houses and have low contacts and medium satisfaction is also high with the value of 1.368. The third highest residual is for people of high satisfaction who live in house and have low cantact. This shows that the model has not been as successful predictiong this portion of data and in general, we can observe some discrepencies in people who live in houses and have high satisfaction.</p>
 </div>
 
 
